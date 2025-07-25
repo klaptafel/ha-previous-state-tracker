@@ -3,22 +3,32 @@
     "config": {
         "step": {
             "user": {
-                "title": "Configure Previous State Tracker",
-                "description": "Select the entities you want to track. A new sensor will be created for each selected entity to show its previous state.",
+                "title": "Set up the Previous State Tracker",
+                "description": "Select the entity for which you want to track the previous state.",
                 "data": {
-                    "name": "Name for this group of trackers",
-                    "entities": "Entities to track"
+                    "entity_id": "Entity"
+                }
+            },
+            "options": {
+                "title": "Configure the Sensor",
+                "data": {
+                    "name": "Name for the new sensor",
+                    "ignore_unknown": "Ignore the 'unknown' state",
+                    "ignore_unavailable": "Ignore the 'unavailable' state"
                 }
             }
+        },
+        "abort": {
+            "already_configured": "Device is already configured"
         }
     },
     "options": {
         "step": {
             "init": {
-                "title": "Update Previous State Tracker",
-                "description": "You can update the list of tracked entities.",
+                "title": "Adjust options for the Previous State Tracker",
                 "data": {
-                    "entities": "Entities to track"
+                    "ignore_unknown": "Ignore the 'unknown' state",
+                    "ignore_unavailable": "Ignore the 'unavailable' state"
                 }
             }
         }
@@ -26,7 +36,14 @@
     "entity": {
         "sensor": {
             "previous_state": {
-                "name": "{name} Previous State"
+                "state": {
+                    "unavailable": "Unavailable (source entity not found)"
+                },
+                "attribute": {
+                    "last_changed": {
+                        "name": "Last Changed"
+                    }
+                }
             }
         }
     }
