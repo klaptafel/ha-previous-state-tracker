@@ -1,0 +1,44 @@
+{
+    "title": "Previous State Tracker",
+    "config": {
+        "step": {
+            "user": {
+                "title": "Configure Previous State Tracker",
+                "description": "Select the entities you want to track. A new sensor will be created for each selected entity to show its previous state.",
+                "data": {
+                    "name": "Name for this group of trackers",
+                    "entities": "Entities to track"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Update Previous State Tracker",
+                "description": "You can update the list of tracked entities.",
+                "data": {
+                    "entities": "Entities to track"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Update Previous State Tracker",
+                "description": "You can update the list of tracked entities.",
+                "data": {
+                    "entities": "Entities to track"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "previous_state": {
+                "name": "{name} Previous State"
+            }
+        }
+    }
+}

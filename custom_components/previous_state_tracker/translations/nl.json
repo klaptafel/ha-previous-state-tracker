@@ -1,0 +1,33 @@
+{
+    "title": "Vorige Status",
+    "config": {
+        "step": {
+            "user": {
+                "title": "Configureer Vorige Status",
+                "description": "Selecteer de entiteiten die je wilt volgen. Voor elke geselecteerde entiteit wordt een nieuwe sensor aangemaakt die de vorige status toont.",
+                "data": {
+                    "name": "Naam voor deze configuratie",
+                    "entities": "Te volgen entiteiten"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Update Vorige Status",
+                "description": "Je kunt de lijst met te volgen entiteiten bijwerken.",
+                "data": {
+                    "entities": "Te volgen entiteiten"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "previous_state": {
+                "name": "{name} Vorige Status"
+            }
+        }
+    }
+}
