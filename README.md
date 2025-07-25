@@ -1,11 +1,8 @@
-![Logo](/logo/logo.png)
-
-# Previous State Tracker for Home Assistant
-
 [![Made for Home Assistant](https://img.shields.io/badge/Made%20for-Home%20Assistant-blue?style=for-the-badge&logo=homeassistant)](https://www.home-assistant.io/)
 
 
-A simple yet powerful Home Assistant helper to track the previous state of any entity. Perfect for creating more intelligent and context-aware automations.
+# A simple yet powerful Home Assistant helper to track the previous state of any entity. Perfect for creating more intelligent and context-aware automations.
+![Logo](/logo/logo.png)
 
 Ever wanted to trigger an automation but needed to know what the *previous* state of a sensor was? This integration solves that problem by providing a dedicated helper that cleanly stores the last known value.
 
