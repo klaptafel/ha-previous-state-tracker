@@ -1,24 +1,34 @@
 {
-    "title": "Vorige Status",
+    "title": "Previous State Tracker",
     "config": {
         "step": {
             "user": {
-                "title": "Configureer Vorige Status",
-                "description": "Selecteer de entiteiten die je wilt volgen. Voor elke geselecteerde entiteit wordt een nieuwe sensor aangemaakt die de vorige status toont.",
+                "title": "Stel de Previous State Tracker in",
+                "description": "Selecteer de entiteit waarvan je de vorige status in de gaten wilt houden.",
                 "data": {
-                    "name": "Naam voor deze configuratie",
-                    "entities": "Te volgen entiteiten"
+                    "entity_id": "Entiteit"
+                }
+            },
+            "options": {
+                "title": "Configureer de sensor",
+                "data": {
+                    "name": "Naam voor de nieuwe sensor",
+                    "ignore_unknown": "Negeer de status 'onbekend'",
+                    "ignore_unavailable": "Negeer de status 'niet beschikbaar'"
                 }
             }
+        },
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
         }
     },
     "options": {
         "step": {
             "init": {
-                "title": "Update Vorige Status",
-                "description": "Je kunt de lijst met te volgen entiteiten bijwerken.",
+                "title": "Pas de opties aan voor de Previous State Tracker",
                 "data": {
-                    "entities": "Te volgen entiteiten"
+                    "ignore_unknown": "Negeer de status 'onbekend'",
+                    "ignore_unavailable": "Negeer de status 'niet beschikbaar'"
                 }
             }
         }
@@ -26,7 +36,14 @@
     "entity": {
         "sensor": {
             "previous_state": {
-                "name": "{name} Vorige Status"
+                "state": {
+                    "unavailable": "Onbeschikbaar (bron-entiteit niet gevonden)"
+                },
+                "attribute": {
+                    "last_changed": {
+                        "name": "Laatste Wijziging"
+                    }
+                }
             }
         }
     }
