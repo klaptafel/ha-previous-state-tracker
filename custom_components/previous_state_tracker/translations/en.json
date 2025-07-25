@@ -23,17 +23,6 @@
             }
         }
     },
-    "options": {
-        "step": {
-            "init": {
-                "title": "Update Previous State Tracker",
-                "description": "You can update the list of tracked entities.",
-                "data": {
-                    "entities": "Entities to track"
-                }
-            }
-        }
-    },
     "entity": {
         "sensor": {
             "previous_state": {
