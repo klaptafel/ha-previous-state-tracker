@@ -39,7 +39,7 @@
                 "state": {
                     "unavailable": "Onbeschikbaar (bron-entiteit niet gevonden)"
                 },
-                "attribute": {
+                "state_attributes": {
                     "last_changed": {
                         "name": "Laatste Wijziging"
                     }
