@@ -39,7 +39,7 @@
                 "state": {
                     "unavailable": "Unavailable (source entity not found)"
                 },
-                "attribute": {
+                "state_attributes": {
                     "last_changed": {
                         "name": "Last Changed"
                     }
