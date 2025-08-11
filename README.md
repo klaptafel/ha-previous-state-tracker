@@ -59,7 +59,8 @@ You can change the "ignore" options at any time after creation.
 ### Humidity trend
 Define a trend based on the current and previous humidity sensor readings using a template sensor.
 
-<img width="500" height="179" alt="entities" src="https://github.com/user-attachments/assets/68b1dda9-a422-4eb6-a03b-0be815187ccf" />
+<img width="500" height="179" alt="entities" src="https://github.com/user-attachments/assets/8d3e428f-a487-45d6-ac1f-87079b388652" />
+
 
 #### Template sensor
 ```yaml
