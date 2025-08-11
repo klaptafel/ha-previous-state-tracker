@@ -52,7 +52,7 @@ You can change the "ignore" options at any time after creation.
 
 
 
-## Example use case
+## Example use-cases
 <details>
 <summary>Humidity trend</summary>
    
@@ -91,4 +91,12 @@ template:
      - entity: sensor.humidity_trend
        name: Trend
 ```
+</details>
+<details>
+<summary>Your use case</summary>
+   
+<i>Please share and inspire others by adding your use case [here](https://github.com/klaptafel/ha-previous-state-tracker/discussions/categories/show-and-tell).  
+Thanks in advance!</i>
+
+   
 </details>
