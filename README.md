@@ -51,52 +51,12 @@ You can change the "ignore" options at any time after creation.
 3.  Click **Configure** and adjust the settings.
 
 
+## Community
+Discussions are the place to share ideas, give feedback, ask questions, or show how you use this integration.
 
-## Example use-cases
-<details>
-<summary>Humidity trend</summary>
-   
-### Humidity trend
-Define a trend based on the current and previous humidity sensor readings using a template sensor.
-
-<img width="500" height="179" alt="entities" src="https://github.com/user-attachments/assets/8d3e428f-a487-45d6-ac1f-87079b388652" />
-
-
-#### Template sensor
-```yaml
-template:
-  - sensor:
-      - name: "Humidity Trend"
-        unique_id: humidity_trend
-        state: >
-          {% set current = states('sensor._humidity') | float(0) %}
-          {% set previous = states('sensor.humidity_previous_state') | float(0) %}
-          {% if current > previous %}
-          Increasing
-          {% elif current < previous %}
-          Decreasing
-          {% else %}
-          Steady
-          {% endif %}
-```
-#### Lovelace card
-```yaml
-type: entities
-entities:
-  - entity: sensor.humidity
-    name: Humidity
-  - entity: sensor.humidity_previous_state
-    name: Previous state
-  - type: divider
-  - entity: sensor.humidity_trend
-    name: Trend
-```
-</details>
-<details>
-<summary>Your use case</summary>
-   
-<i>Please share and inspire others by adding your use case [here](https://github.com/klaptafel/ha-previous-state-tracker/discussions/categories/show-and-tell).  
-Thanks in advance!</i>
-
-   
-</details>
+## Join the discussion 
+- [💬 General](../../discussions/categories/general) – Anything related to this integration.  
+- [💡 Ideas](../../discussions/categories/ideas) – Suggest improvements **and vote** on ideas.  
+- [📦 Polls](../../discussions/categories/polls) – Vote and share your opinion on upcoming changes.  
+- [🙏 Q&A](../../discussions/categories/q-a) – Ask questions and get help.  
+- [🙌 Show and tell](../../discussions/categories/show-and-tell) – See examples of how others use this integration, or share your own.
