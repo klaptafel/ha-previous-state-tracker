@@ -25,11 +25,9 @@ This integration is available via [HACS](https://hacs.xyz/).
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=klaptafel&repository=ha-previous-state-tracker&category=integration)
 
 1.  Go to HACS in your Home Assistant.
-2.  Go to on `Custom repositories`.
-3.  Add [this repository](https://github.com/klaptafel/ha-previous-state-tracker) as Integration.
-4.  Search for "Previous State Tracker" and click on it.
-5.  Click the "Download" button and follow the instructions.
-6.  Restart Home Assistant.
+2.  Search for "Previous State Tracker" and click on it.
+3.  Click the "Download" button and follow the instructions.
+4.  Restart Home Assistant.
 
 
 ## Configuration
