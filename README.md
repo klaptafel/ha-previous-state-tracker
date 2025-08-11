@@ -1,4 +1,5 @@
 [![Made for Home Assistant](https://img.shields.io/badge/Made%20for-Home%20Assistant-blue?style=for-the-badge&logo=homeassistant)](https://www.home-assistant.io/)
+[![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge&cacheSeconds=3600)](https://github.com/hacs/integration)
 
 
 # A simple yet powerful Home Assistant helper to track the previous state of any entity. Perfect for creating more intelligent and context-aware automations.
@@ -53,5 +54,42 @@ You can change the "ignore" options at any time after creation.
 
 
 
-👋🏻
+## Example use case
+<details>
+<summary>Humidity trend</summary>
+   
+### Humidity trend
+Define a trend based on the current and previous humidity sensor readings using a template sensor.
 
+<img width="500" height="179" alt="entities" src="https://github.com/user-attachments/assets/68b1dda9-a422-4eb6-a03b-0be815187ccf" />
+
+#### Template sensor
+```yaml
+template:
+  - sensor:
+      - name: "Humidity Trend"
+        unique_id: humidity_trend
+        state: >
+          {% set current = states('sensor._humidity') | float(0) %}
+          {% set previous = states('sensor.humidity_previous_state') | float(0) %}
+          {% if current > previous %}
+          Increasing
+          {% elif current < previous %}
+          Decreasing
+          {% else %}
+          Steady
+          {% endif %}
+```
+#### Lovelace card
+```yaml
+   type: entities
+   entities:
+     - entity: sensor.humidity
+       name: Humidity
+     - entity: sensor.humidity_previous_state
+       name: Previous state
+     - type: divider
+     - entity: sensor.humidity_trend
+       name: Trend
+```
+</details>
