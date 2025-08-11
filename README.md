@@ -81,15 +81,15 @@ template:
 ```
 #### Lovelace card
 ```yaml
-   type: entities
-   entities:
-     - entity: sensor.humidity
-       name: Humidity
-     - entity: sensor.humidity_previous_state
-       name: Previous state
-     - type: divider
-     - entity: sensor.humidity_trend
-       name: Trend
+type: entities
+entities:
+  - entity: sensor.humidity
+    name: Humidity
+  - entity: sensor.humidity_previous_state
+    name: Previous state
+  - type: divider
+  - entity: sensor.humidity_trend
+    name: Trend
 ```
 </details>
 <details>
