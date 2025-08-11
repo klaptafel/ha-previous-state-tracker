@@ -51,12 +51,11 @@ You can change the "ignore" options at any time after creation.
 3.  Click **Configure** and adjust the settings.
 
 
-## Community
-Discussions are the place to share ideas, give feedback, ask questions, or show how you use this integration.
+## Discussions
+Share ideas, feedback, questions, or your setups with this integration.
 
-## Join the discussion 
-- [💬 General](../../discussions/categories/general) – Anything related to this integration.  
-- [💡 Ideas](../../discussions/categories/ideas) – Suggest improvements **and vote** on ideas.  
-- [📦 Polls](../../discussions/categories/polls) – Vote and share your opinion on upcoming changes.  
-- [🙏 Q&A](../../discussions/categories/q-a) – Ask questions and get help.  
-- [🙌 Show and tell](../../discussions/categories/show-and-tell) – See examples of how others use this integration, or share your own.
+### Categories 
+- 💬 [General](../../discussions/categories/general) – Anything related to this integration.  
+- 💡 [Ideas](../../discussions/categories/ideas) – Suggest improvements **and vote** on ideas. 
+- 🙏 [Q&A](../../discussions/categories/q-a) – Ask questions and get help.  
+- 🙌 [Show and tell](../../discussions/categories/show-and-tell) – See examples of how others use this integration, or share your own.
