@@ -3,13 +3,12 @@ from typing import Set, Tuple
 
 from homeassistant.components.sensor import SensorEntity, SensorDeviceClass, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback, State
+from homeassistant.core import HomeAssistant, callback, State, Event # <-- CORRECTE IMPORT
 from homeassistant.helpers import entity_registry as er, device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event, EventStateChangedData
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import EventType
 
 from .const import (
     DOMAIN,
@@ -29,11 +28,8 @@ async def async_setup_entry(
     name = config["name"]
     ignore_unknown = config.get(CONF_IGNORE_UNKNOWN, True)
     ignore_unavailable = config.get(CONF_IGNORE_UNAVAILABLE, True)
-    
-    entity_registry = er.async_get(hass)
-    source_entity_entry = entity_registry.async_get(entity_id)
-    device_id = source_entity_entry.device_id if source_entity_entry else None
-    
+    device_id = config.get("device_id")
+
     device_identifiers: Set[Tuple[str, str]] | None = None
     if device_id:
         device_registry = dr.async_get(hass)
@@ -48,7 +44,7 @@ async def async_setup_entry(
         ignore_unknown=ignore_unknown,
         ignore_unavailable=ignore_unavailable,
         unique_id=config_entry.entry_id,
-        device_identifiers=device_identifiers,
+        device_identifiers=device_identifiers
     )
     async_add_entities([sensor])
 
@@ -67,7 +63,7 @@ class PreviousStateSensor(SensorEntity, RestoreEntity):
         ignore_unknown: bool,
         ignore_unavailable: bool,
         unique_id: str,
-        device_identifiers: Set[Tuple[str, str]] | None,
+        device_identifiers: Set[Tuple[str, str]] | None
     ) -> None:
         self.hass = hass
         self._tracked_entity_id = entity_id
@@ -107,7 +103,7 @@ class PreviousStateSensor(SensorEntity, RestoreEntity):
 
         @callback
         def state_change_listener(
-            event: EventType[EventStateChangedData],
+            event: Event[EventStateChangedData], # <-- CORRECTE TYPE HINT
         ) -> None:
             self._update_and_write_state(event.data.get("old_state"), event.data.get("new_state"), event.time_fired)
 
@@ -118,16 +114,19 @@ class PreviousStateSensor(SensorEntity, RestoreEntity):
         )
 
     def _update_and_write_state(self, old_state: State | None, new_state: State | None, time_fired = None) -> None:
-        """Update the state and write to HA."""
         self._attr_available = new_state is not None
 
-        # --- NIEUW: Update de attributen bij elke wijziging ---
         if new_state and self._tracked_entity_id.startswith("sensor."):
-            self._attr_native_unit_of_measurement = new_state.attributes.get("unit_of_measurement")
-            self._attr_device_class = new_state.attributes.get("device_class")
-            self._attr_state_class = new_state.attributes.get("state_class")
-        # ----------------------------------------------------
-
+            new_unit = new_state.attributes.get("unit_of_measurement")
+            new_device_class = new_state.attributes.get("device_class")
+            new_state_class = new_state.attributes.get("state_class")
+            if (self._attr_native_unit_of_measurement != new_unit or
+                self._attr_device_class != new_device_class or
+                self._attr_state_class != new_state_class):
+                self._attr_native_unit_of_measurement = new_unit
+                self._attr_device_class = new_device_class
+                self._attr_state_class = new_state_class
+        
         if old_state is None:
             if self.hass.is_running:
                 self.async_write_ha_state()
