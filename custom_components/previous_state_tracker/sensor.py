@@ -30,18 +30,6 @@ async def async_setup_entry(
     ignore_unknown = config.get(CONF_IGNORE_UNKNOWN, True)
     ignore_unavailable = config.get(CONF_IGNORE_UNAVAILABLE, True)
     
-    source_unit: str | None = None
-    source_device_class: SensorDeviceClass | None = None
-    source_state_class: SensorStateClass | None = None
-
-    # --- NIEUW: Controleer of de bron een sensor is ---
-    source_state = hass.states.get(entity_id)
-    if source_state and entity_id.startswith("sensor."):
-        source_unit = source_state.attributes.get("unit_of_measurement")
-        source_device_class = source_state.attributes.get("device_class")
-        source_state_class = source_state.attributes.get("state_class")
-    # -----------------------------------------------
-    
     entity_registry = er.async_get(hass)
     source_entity_entry = entity_registry.async_get(entity_id)
     device_id = source_entity_entry.device_id if source_entity_entry else None
@@ -61,9 +49,6 @@ async def async_setup_entry(
         ignore_unavailable=ignore_unavailable,
         unique_id=config_entry.entry_id,
         device_identifiers=device_identifiers,
-        unit_of_measurement=source_unit,
-        device_class=source_device_class,
-        state_class=source_state_class,
     )
     async_add_entities([sensor])
 
@@ -83,9 +68,6 @@ class PreviousStateSensor(SensorEntity, RestoreEntity):
         ignore_unavailable: bool,
         unique_id: str,
         device_identifiers: Set[Tuple[str, str]] | None,
-        unit_of_measurement: str | None,
-        device_class: SensorDeviceClass | None,
-        state_class: SensorStateClass | None,
     ) -> None:
         self.hass = hass
         self._tracked_entity_id = entity_id
@@ -98,10 +80,9 @@ class PreviousStateSensor(SensorEntity, RestoreEntity):
             "tracked_entity_id": entity_id,
             "last_changed": None,
         }
-
-        self._attr_native_unit_of_measurement = unit_of_measurement
-        self._attr_device_class = device_class
-        self._attr_state_class = state_class
+        self._attr_native_unit_of_measurement = None
+        self._attr_device_class = None
+        self._attr_state_class = None
 
         if device_identifiers:
             self._attr_device_info = DeviceInfo(
@@ -114,35 +95,52 @@ class PreviousStateSensor(SensorEntity, RestoreEntity):
         last_state = await self.async_get_last_state()
         if last_state:
             self._attr_native_value = last_state.state
+            self._attr_native_unit_of_measurement = last_state.attributes.get("unit_of_measurement")
+            self._attr_device_class = last_state.attributes.get("device_class")
+            self._attr_state_class = last_state.attributes.get("state_class")
             if "last_changed" in last_state.attributes:
                 self._attr_extra_state_attributes["last_changed"] = last_state.attributes["last_changed"]
 
-        self._attr_available = self.hass.states.get(self._tracked_entity_id) is not None
+        source_state = self.hass.states.get(self._tracked_entity_id)
+        if source_state:
+            self._update_and_write_state(None, source_state)
 
         @callback
         def state_change_listener(
             event: EventType[EventStateChangedData],
         ) -> None:
-            old_state = event.data.get("old_state")
-            new_state = event.data.get("new_state")
-
-            self._attr_available = new_state is not None
-            
-            if old_state is None:
-                self.async_write_ha_state()
-                return
-
-            if self._ignore_unknown and old_state.state == "unknown":
-                return
-            if self._ignore_unavailable and old_state.state == "unavailable":
-                return
-
-            self._attr_native_value = old_state.state
-            self._attr_extra_state_attributes["last_changed"] = event.time_fired.isoformat()
-            self.async_write_ha_state()
+            self._update_and_write_state(event.data.get("old_state"), event.data.get("new_state"), event.time_fired)
 
         self.async_on_remove(
             async_track_state_change_event(
                 self.hass, [self._tracked_entity_id], state_change_listener
             )
         )
+
+    def _update_and_write_state(self, old_state: State | None, new_state: State | None, time_fired = None) -> None:
+        """Update the state and write to HA."""
+        self._attr_available = new_state is not None
+
+        # --- NIEUW: Update de attributen bij elke wijziging ---
+        if new_state and self._tracked_entity_id.startswith("sensor."):
+            self._attr_native_unit_of_measurement = new_state.attributes.get("unit_of_measurement")
+            self._attr_device_class = new_state.attributes.get("device_class")
+            self._attr_state_class = new_state.attributes.get("state_class")
+        # ----------------------------------------------------
+
+        if old_state is None:
+            if self.hass.is_running:
+                self.async_write_ha_state()
+            return
+            
+        if self._ignore_unknown and old_state.state == "unknown":
+            return
+        if self._ignore_unavailable and old_state.state == "unavailable":
+            return
+
+        self._attr_native_value = old_state.state
+        if time_fired:
+            self._attr_extra_state_attributes["last_changed"] = time_fired.isoformat()
+        
+        if self.hass.is_running:
+            self.async_write_ha_state()
