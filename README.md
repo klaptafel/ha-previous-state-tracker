@@ -4,7 +4,7 @@
 # Previous State Tracker
 A simple yet powerful Home Assistant helper to track the previous state of any entity. Perfect for creating more intelligent and context-aware automations.
 
-![Logo](/logo/logo.png)
+![Logo](/custom_components/previous_state_tracker/brand/logo.png)
 
 This integration provides a helper to track the previous state of an entity. While this can be partially replicated with `template` sensors, this integration is designed to be a more reliable and convenient solution that handles several complexities automatically.
 
