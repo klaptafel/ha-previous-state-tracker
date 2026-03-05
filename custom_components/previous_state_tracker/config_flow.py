@@ -29,7 +29,7 @@ class PreviousStateTrackerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(config_entry: config_entries.ConfigEntry) -> config_entries.OptionsFlow:
-        return PreviousStateTrackerOptionsFlow(config_entry)
+        return PreviousStateTrackerOptionsFlow()
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> config_entries.FlowResult:
         if user_input is not None:
@@ -82,9 +82,6 @@ class PreviousStateTrackerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class PreviousStateTrackerOptionsFlow(config_entries.OptionsFlow):
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        self.config_entry = config_entry
-
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> config_entries.FlowResult:
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
