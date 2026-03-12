@@ -1,7 +1,12 @@
 [![Made for Home Assistant](https://img.shields.io/badge/Made%20for-Home%20Assistant-blue?style=for-the-badge&logo=homeassistant)](https://www.home-assistant.io/)
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge)](https://github.com/hacs/integration)
 
+
 # Previous State Tracker
+> [!NOTE]
+> This integration is vibe coded
+
+
 A simple yet powerful Home Assistant helper to track the previous state of any entity. Perfect for creating more intelligent and context-aware automations.
 
 ![Logo](/custom_components/previous_state_tracker/brand/logo.png)
