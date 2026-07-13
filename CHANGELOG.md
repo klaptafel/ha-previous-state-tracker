@@ -2,9 +2,9 @@
 
 All notable changes to this project are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). Versions before 1.0.5 are not retroactively documented; see git history / GitHub releases for those.
 
-## [Unreleased]
+## [1.1.0] - 2026-07-13
 
-Fixes a bug where renaming the tracked entity broke the tracker (it now follows renames automatically), and another where ignoring "unavailable"/"unknown" states only worked in one direction ([#9](https://github.com/klaptafel/ha-previous-state-tracker/issues/9)). Also adds several requested features: change which entity a tracker follows without deleting and recreating it, a new attribute showing how long the entity spent in its previous state, and the option to ignore extra device-specific states (not just the two universal ones) with a handy suggestion picker. Naming is clearer too, especially for devices with more than one trackable sensor.
+Adds several requested features: change which entity a tracker follows without deleting and recreating it, a new attribute showing how long the entity spent in its previous state, and the option to ignore extra device-specific states (not just the two universal ones) with a handy suggestion picker. A repair notification now also appears if the tracked entity is removed or disabled, so it's obvious why the sensor stopped updating. Also fixes two real bugs: renaming the tracked entity used to break the tracker (it now follows renames automatically), and ignoring "unavailable"/"unknown" states only worked in one direction ([#9](https://github.com/klaptafel/ha-previous-state-tracker/issues/9)). Naming is clearer too, especially for devices with more than one trackable sensor.
 
 ### Fixed
 - `manifest.json`'s `version` field was stale at `1.0.0` despite five patch releases (1.0.1–1.0.5) already being live on GitHub, corrected.
