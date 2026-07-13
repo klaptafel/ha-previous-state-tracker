@@ -11,24 +11,43 @@
             },
             "options": {
                 "title": "Configureer de sensor",
+                "description": "Volgt `{entity_id}`.",
                 "data": {
-                    "name": "Naam voor de nieuwe sensor",
+                    "name": "Naam",
                     "ignore_unknown": "Negeer de status 'onbekend'",
-                    "ignore_unavailable": "Negeer de status 'niet beschikbaar'"
+                    "ignore_unavailable": "Negeer de status 'niet beschikbaar'",
+                    "ignore_extra_states": "Extra te negeren statussen"
+                },
+                "data_description": {
+                    "name": "Identificeert deze tracker onder Instellingen > Apparaten & diensten. De weergavenaam van de sensor zelf is automatisch -- die volgt de naam van de gevolgde entiteit (en het bijbehorende apparaat, indien aanwezig), zodat die klopt blijft ook als je die entiteit later hernoemt.",
+                    "ignore_extra_states": "Kies uit de bekende/recente statussen van de entiteit (getoond zoals de entiteit ze zelf ook weergeeft), of typ een nieuwe. Beïnvloedt alleen welke status als de vorige status van de gevolgde entiteit telt -- verbergt of filtert de bron-entiteit zelf niet."
+                }
+            },
+            "reconfigure": {
+                "title": "Wijzig de gevolgde entiteit",
+                "description": "Wijzig welke entiteit \"{name}\" volgt. De naam en opties van de sensor blijven ongewijzigd.",
+                "data": {
+                    "entity_id": "Entiteit"
                 }
             }
         },
         "abort": {
-            "already_configured": "Apparaat is al geconfigureerd"
+            "already_configured": "Apparaat is al geconfigureerd",
+            "reconfigure_successful": "Herconfiguratie geslaagd"
         }
     },
     "options": {
         "step": {
             "init": {
                 "title": "Pas de opties aan voor de Previous State Tracker",
+                "description": "\"{name}\" volgt `{entity_id}`.",
                 "data": {
                     "ignore_unknown": "Negeer de status 'onbekend'",
-                    "ignore_unavailable": "Negeer de status 'niet beschikbaar'"
+                    "ignore_unavailable": "Negeer de status 'niet beschikbaar'",
+                    "ignore_extra_states": "Extra te negeren statussen"
+                },
+                "data_description": {
+                    "ignore_extra_states": "Kies uit de bekende/recente statussen van de entiteit (getoond zoals de entiteit ze zelf ook weergeeft), of typ een nieuwe. Beïnvloedt alleen welke status als de vorige status van de gevolgde entiteit telt -- verbergt of filtert de bron-entiteit zelf niet."
                 }
             }
         }
@@ -36,15 +55,29 @@
     "entity": {
         "sensor": {
             "previous_state": {
+                "name": "Vorige Status",
                 "state": {
                     "unavailable": "Onbeschikbaar (bron-entiteit niet gevonden)"
                 },
                 "state_attributes": {
                     "last_changed": {
                         "name": "Laatste Wijziging"
+                    },
+                    "duration_in_previous_state": {
+                        "name": "Duur in Vorige Status"
                     }
                 }
             }
+        }
+    },
+    "issues": {
+        "tracked_entity_removed": {
+            "title": "Gevolgde entiteit bestaat niet meer",
+            "description": "\"{name}\" volgt `{entity_id}`, maar die entiteit bestaat niet meer (mogelijk hernoemd of verwijderd). De sensor blijft de laatst bekende waarde tonen totdat je dit aanpast via Instellingen > Apparaten & diensten > Previous State Tracker > Herconfigureren."
+        },
+        "tracked_entity_disabled": {
+            "title": "Gevolgde entiteit is uitgeschakeld",
+            "description": "\"{name}\" volgt `{entity_id}`, maar die entiteit is momenteel uitgeschakeld, waardoor de sensor niet beschikbaar is. Is dat bewust, dan kun je dit negeren. Anders zet je de entiteit weer aan via Instellingen > Apparaten & diensten > Entiteiten."
         }
     }
 }

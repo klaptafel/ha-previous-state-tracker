@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "previous_state": {
+        "default": "mdi:history"
+      }
+    }
+  }
+}

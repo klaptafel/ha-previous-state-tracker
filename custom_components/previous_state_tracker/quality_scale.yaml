@@ -1,0 +1,145 @@
+rules:
+  # Bronze
+  config-flow: done
+  appropriate-polling:
+    status: exempt
+    comment: Push-based via a state-change listener on the tracked entity, no polling.
+  brands:
+    status: done
+    comment: >
+      Local brand/ folder has icon.png/icon@2x.png/logo.png/logo@2x.png —
+      the current standard since HA 2026.3 (Brands Proxy API). Also already
+      merged into home-assistant/brands (custom_integrations/
+      previous_state_tracker/) from before that change, though that path is
+      now explicitly called "legacy" by that repo — the local folder is
+      what actually matters going forward.
+  common-modules: done
+  config-flow-test-coverage:
+    status: todo
+    comment: >
+      No test suite exists in this project at all (no tests/ directory).
+      Needs a pytest-homeassistant-custom-component setup before this — or
+      test-coverage below — can be satisfied.
+  dependency-transparency:
+    status: done
+    comment: No external dependencies (manifest.json requirements is empty).
+  docs-actions:
+    status: exempt
+    comment: This integration registers no service actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name:
+    status: done
+    comment: >
+      _attr_has_entity_name = True. When the tracked entity has a device
+      (merged onto that same device via shared identifiers, see the
+      `devices` rule below), the name resolves via translation_key to the
+      "Previous State" translation, auto-prefixed with that device's own
+      always-current name. Without a device, the name property computes
+      "<tracked entity's current name> Previous State" itself, so it stays
+      correct if the tracked entity is renamed later -- previously this was
+      a static string frozen at config time.
+  runtime-data:
+    status: exempt
+    comment: >
+      No shared/coordinator state to store — each sensor is fully
+      self-contained from the config passed at construction time, nothing
+      is read back from hass.data or runtime_data anywhere.
+  test-before-configure:
+    status: exempt
+    comment: The config flow only lets the user pick an entity to track — no connection to validate.
+  test-before-setup:
+    status: exempt
+    comment: No external device/connection to validate.
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: No service actions registered.
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters:
+    status: exempt
+    comment: Installation requires only selecting the entity to track — no host/token/device parameters.
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: No authentication needed.
+  test-coverage:
+    status: todo
+    comment: Blocked on the same missing test suite as config-flow-test-coverage above.
+
+  # Gold
+  devices:
+    status: done
+    comment: DeviceInfo is set from the tracked entity's device_identifiers when the source entity belongs to a device.
+  diagnostics: done
+  discovery:
+    status: exempt
+    comment: Nothing to discover — this is a software-only helper, not a device on the network.
+  discovery-update-info:
+    status: exempt
+    comment: Same reason as discovery.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices:
+    status: exempt
+    comment: Entity-agnostic by design — works with any entity's state, no device compatibility list applies.
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: One static entity per config entry, nothing added/removed at runtime.
+  entity-category: done
+  entity-device-class:
+    status: done
+    comment: >
+      Dynamically copied from the tracked entity's own device_class
+      whenever the tracked entity is a sensor. Appropriate for a
+      value-mirroring helper — no single fixed device class would fit.
+  entity-disabled-by-default:
+    status: exempt
+    comment: The one entity is the integration's entire purpose — nothing noisy/optional to disable by default.
+  entity-translations: done
+  exception-translations:
+    status: exempt
+    comment: No custom exceptions raised anywhere in this integration's runtime code.
+  icon-translations: done
+  reconfiguration-flow:
+    status: done
+    comment: async_step_reconfigure lets the user change the tracked entity_id without deleting and recreating the helper.
+  repair-issues:
+    status: done
+    comment: >
+      A repair issue is created when the tracked entity is gone from the
+      entity registry entirely (a much stronger signal than merely having
+      no current state, which also happens transiently). Self-heals by
+      deleting the issue once the entity is found again, same pattern as
+      notify-dashboard's mirror_dismiss_to repair.
+  stale-devices:
+    status: exempt
+    comment: This integration never creates devices itself, only links to an existing one.
+
+  # Platinum
+  async-dependency:
+    status: exempt
+    comment: No external dependency (empty requirements list).
+  inject-websession:
+    status: exempt
+    comment: No aiohttp client of our own — same reason as async-dependency.
+  strict-typing:
+    status: todo
+    comment: >
+      No mypy step exists in CI for this project at all (test.yml doesn't
+      exist here, unlike fraimic/notify-dashboard). Code is mostly typed
+      but uses the deprecated typing.Set/typing.Tuple instead of the
+      builtin generics (set[...]/tuple[...]) in sensor.py.

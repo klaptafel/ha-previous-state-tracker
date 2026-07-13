@@ -11,24 +11,43 @@
             },
             "options": {
                 "title": "Configure the Sensor",
+                "description": "Tracking `{entity_id}`.",
                 "data": {
-                    "name": "Name for the new sensor",
+                    "name": "Name",
                     "ignore_unknown": "Ignore the 'unknown' state",
-                    "ignore_unavailable": "Ignore the 'unavailable' state"
+                    "ignore_unavailable": "Ignore the 'unavailable' state",
+                    "ignore_extra_states": "Additional states to ignore"
+                },
+                "data_description": {
+                    "name": "Identifies this tracker under Settings > Devices & Services. The sensor's own display name is automatic -- it follows the tracked entity's name (and its device, if it has one), so it stays correct even if you rename that entity later.",
+                    "ignore_extra_states": "Pick from the entity's known/recent states (shown the same way the entity itself displays them), or type a new one. Only affects which state counts as the tracked entity's previous state -- it doesn't hide or filter the source entity itself."
+                }
+            },
+            "reconfigure": {
+                "title": "Change the tracked entity",
+                "description": "Change which entity \"{name}\" tracks. The sensor's name and options stay the same.",
+                "data": {
+                    "entity_id": "Entity"
                 }
             }
         },
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "Device is already configured",
+            "reconfigure_successful": "Reconfiguration successful"
         }
     },
     "options": {
         "step": {
             "init": {
                 "title": "Adjust options for the Previous State Tracker",
+                "description": "\"{name}\" is tracking `{entity_id}`.",
                 "data": {
                     "ignore_unknown": "Ignore the 'unknown' state",
-                    "ignore_unavailable": "Ignore the 'unavailable' state"
+                    "ignore_unavailable": "Ignore the 'unavailable' state",
+                    "ignore_extra_states": "Additional states to ignore"
+                },
+                "data_description": {
+                    "ignore_extra_states": "Pick from the entity's known/recent states (shown the same way the entity itself displays them), or type a new one. Only affects which state counts as the tracked entity's previous state -- it doesn't hide or filter the source entity itself."
                 }
             }
         }
@@ -36,15 +55,29 @@
     "entity": {
         "sensor": {
             "previous_state": {
+                "name": "Previous State",
                 "state": {
                     "unavailable": "Unavailable (source entity not found)"
                 },
                 "state_attributes": {
                     "last_changed": {
                         "name": "Last Changed"
+                    },
+                    "duration_in_previous_state": {
+                        "name": "Duration in Previous State"
                     }
                 }
             }
+        }
+    },
+    "issues": {
+        "tracked_entity_removed": {
+            "title": "Tracked entity no longer exists",
+            "description": "\"{name}\" is tracking `{entity_id}`, but that entity no longer exists (it may have been renamed or removed). The sensor will keep showing its last known value until you update it under Settings > Devices & Services > Previous State Tracker > Reconfigure."
+        },
+        "tracked_entity_disabled": {
+            "title": "Tracked entity is disabled",
+            "description": "\"{name}\" is tracking `{entity_id}`, but that entity is currently disabled, so the sensor shows as unavailable. If that's intentional, you can dismiss this. Otherwise, re-enable the entity under Settings > Devices & Services > Entities."
         }
     }
 }
