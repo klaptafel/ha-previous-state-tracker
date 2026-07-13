@@ -2,6 +2,7 @@
     "domain": "previous_state_tracker",
     "name": "Previous State Tracker",
     "codeowners": ["@klaptafel"],
+    "after_dependencies": ["recorder"],
     "config_flow": true,
     "dependencies": [],
     "documentation": "https://github.com/klaptafel/ha-previous-state-tracker",

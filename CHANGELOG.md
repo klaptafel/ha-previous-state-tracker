@@ -12,6 +12,7 @@ Fixes a bug where renaming the tracked entity broke the tracker (it now follows 
 - The config flow's suggested default sensor name was hardcoded in Dutch ("... Vorige Status") regardless of the user's language setting; now in English ("... Previous State").
 - If the tracked entity was renamed via the entity registry (same entity, new `entity_id`), the tracker kept listening to the dead old `entity_id` forever instead of following the rename; it's now followed automatically, including across multiple renames, with the config entry updated so a restart doesn't revert it.
 - Two meaningless leftover Dutch debug comments removed.
+- `manifest.json` was missing `recorder` under `after_dependencies`, despite the "Additional states to ignore" suggestion picker using it (best-effort, already tolerates it being absent); caught by `hassfest`.
 
 ### Added
 - `diagnostics.py`: downloadable diagnostics under Settings > Devices & Services.
