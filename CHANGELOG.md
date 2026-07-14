@@ -2,9 +2,9 @@
 
 All notable changes to this project are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). Versions before 1.0.5 are not retroactively documented; see git history / GitHub releases for those.
 
-## [Unreleased]
+## [1.1.1] - 2026-07-14
 
-No user-facing changes. Some internal code cleanup.
+Some internal code cleanup.
 
 ### Changed
 - Duplicated logic moved into a new shared `util.py`: `merged_config()` (combining a config entry's data+options, previously repeated in `sensor.py`/`diagnostics.py`) and `humanize_entity_id()` (the fallback display-name formatting, previously repeated in `config_flow.py`/`sensor.py`).
