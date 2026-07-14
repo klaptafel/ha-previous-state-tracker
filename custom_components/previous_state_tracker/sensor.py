@@ -22,7 +22,10 @@ from .const import (
     CONF_IGNORE_UNKNOWN,
     CONF_IGNORE_UNAVAILABLE,
     CONF_IGNORE_EXTRA_STATES,
+    DEFAULT_IGNORE_UNAVAILABLE,
+    DEFAULT_IGNORE_UNKNOWN,
 )
+from .util import humanize_entity_id, merged_config
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,11 +36,11 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    config = {**config_entry.data, **config_entry.options}
+    config = merged_config(config_entry)
 
     entity_id = config[CONF_ENTITY_ID]
-    ignore_unknown = config.get(CONF_IGNORE_UNKNOWN, True)
-    ignore_unavailable = config.get(CONF_IGNORE_UNAVAILABLE, True)
+    ignore_unknown = config.get(CONF_IGNORE_UNKNOWN, DEFAULT_IGNORE_UNKNOWN)
+    ignore_unavailable = config.get(CONF_IGNORE_UNAVAILABLE, DEFAULT_IGNORE_UNAVAILABLE)
     ignore_extra_states = config.get(CONF_IGNORE_EXTRA_STATES, [])
     device_id = config.get("device_id")
 
@@ -149,7 +152,7 @@ class PreviousStateSensor(SensorEntity, RestoreEntity):
             entity_entry = er.async_get(self.hass).async_get(self._tracked_entity_id)
             source_name = (entity_entry.name or entity_entry.original_name) if entity_entry else None
             if not source_name:
-                source_name = self._tracked_entity_id.split(".", 1)[-1].replace("_", " ").title()
+                source_name = humanize_entity_id(self._tracked_entity_id)
             # Defensive: a source entity that doesn't use has_entity_name
             # itself stores its already-fully-prefixed name in the registry
             # (e.g. "Woonkamer Fraimic Send Status") -- strip that prefix so
@@ -287,15 +290,9 @@ class PreviousStateSensor(SensorEntity, RestoreEntity):
             ir.async_delete_issue(self.hass, DOMAIN, self._disabled_issue_id)
 
         if new_state and self._tracked_entity_id.startswith("sensor."):
-            new_unit = new_state.attributes.get("unit_of_measurement")
-            new_device_class = new_state.attributes.get("device_class")
-            new_state_class = new_state.attributes.get("state_class")
-            if (self._attr_native_unit_of_measurement != new_unit or
-                self._attr_device_class != new_device_class or
-                self._attr_state_class != new_state_class):
-                self._attr_native_unit_of_measurement = new_unit
-                self._attr_device_class = new_device_class
-                self._attr_state_class = new_state_class
+            self._attr_native_unit_of_measurement = new_state.attributes.get("unit_of_measurement")
+            self._attr_device_class = new_state.attributes.get("device_class")
+            self._attr_state_class = new_state.attributes.get("state_class")
         
         if old_state is None:
             if self.hass.is_running:
@@ -345,33 +342,30 @@ class PreviousStateSensor(SensorEntity, RestoreEntity):
         entity_registry = er.async_get(self.hass)
         entry = entity_registry.async_get(self._tracked_entity_id)
 
+        # The two issues are mutually exclusive -- at most one is ever
+        # active. Figure out which (if either), then delete the other and
+        # (re-)create the active one in one shared place.
         if entry is not None and entry.disabled_by is not None:
-            ir.async_delete_issue(self.hass, DOMAIN, self._removed_issue_id)
-            ir.async_create_issue(
-                self.hass,
-                DOMAIN,
-                self._disabled_issue_id,
-                is_fixable=False,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="tracked_entity_disabled",
-                translation_placeholders={
-                    "entity_id": self._tracked_entity_id,
-                    "name": self.name or self._tracked_entity_id,
-                },
+            active_id, other_id, translation_key = (
+                self._disabled_issue_id, self._removed_issue_id, "tracked_entity_disabled"
             )
+        elif entry is None:
+            active_id, other_id, translation_key = (
+                self._removed_issue_id, self._disabled_issue_id, "tracked_entity_removed"
+            )
+        else:
+            ir.async_delete_issue(self.hass, DOMAIN, self._removed_issue_id)
+            ir.async_delete_issue(self.hass, DOMAIN, self._disabled_issue_id)
             return
 
-        ir.async_delete_issue(self.hass, DOMAIN, self._disabled_issue_id)
-        if entry is not None:
-            ir.async_delete_issue(self.hass, DOMAIN, self._removed_issue_id)
-            return
+        ir.async_delete_issue(self.hass, DOMAIN, other_id)
         ir.async_create_issue(
             self.hass,
             DOMAIN,
-            self._removed_issue_id,
+            active_id,
             is_fixable=False,
             severity=ir.IssueSeverity.WARNING,
-            translation_key="tracked_entity_removed",
+            translation_key=translation_key,
             translation_placeholders={
                 "entity_id": self._tracked_entity_id,
                 "name": self.name or self._tracked_entity_id,

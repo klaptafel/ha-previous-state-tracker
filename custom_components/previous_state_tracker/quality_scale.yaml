@@ -7,19 +7,19 @@ rules:
   brands:
     status: done
     comment: >
-      Local brand/ folder has icon.png/icon@2x.png/logo.png/logo@2x.png —
+      Local brand/ folder has icon.png/icon@2x.png/logo.png/logo@2x.png:
       the current standard since HA 2026.3 (Brands Proxy API). Also already
       merged into home-assistant/brands (custom_integrations/
       previous_state_tracker/) from before that change, though that path is
-      now explicitly called "legacy" by that repo — the local folder is
+      now explicitly called "legacy" by that repo; the local folder is
       what actually matters going forward.
   common-modules: done
   config-flow-test-coverage:
     status: todo
     comment: >
       No test suite exists in this project at all (no tests/ directory).
-      Needs a pytest-homeassistant-custom-component setup before this — or
-      test-coverage below — can be satisfied.
+      Needs a pytest-homeassistant-custom-component setup before this (or
+      test-coverage below) can be satisfied.
   dependency-transparency:
     status: done
     comment: No external dependencies (manifest.json requirements is empty).
@@ -45,12 +45,12 @@ rules:
   runtime-data:
     status: exempt
     comment: >
-      No shared/coordinator state to store — each sensor is fully
+      No shared/coordinator state to store: each sensor is fully
       self-contained from the config passed at construction time, nothing
       is read back from hass.data or runtime_data anywhere.
   test-before-configure:
     status: exempt
-    comment: The config flow only lets the user pick an entity to track — no connection to validate.
+    comment: The config flow only lets the user pick an entity to track; no connection to validate.
   test-before-setup:
     status: exempt
     comment: No external device/connection to validate.
@@ -64,7 +64,7 @@ rules:
   docs-configuration-parameters: done
   docs-installation-parameters:
     status: exempt
-    comment: Installation requires only selecting the entity to track — no host/token/device parameters.
+    comment: Installation requires only selecting the entity to track; no host/token/device parameters.
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
@@ -83,7 +83,7 @@ rules:
   diagnostics: done
   discovery:
     status: exempt
-    comment: Nothing to discover — this is a software-only helper, not a device on the network.
+    comment: Nothing to discover; this is a software-only helper, not a device on the network.
   discovery-update-info:
     status: exempt
     comment: Same reason as discovery.
@@ -92,7 +92,7 @@ rules:
   docs-known-limitations: done
   docs-supported-devices:
     status: exempt
-    comment: Entity-agnostic by design — works with any entity's state, no device compatibility list applies.
+    comment: Entity-agnostic by design; works with any entity's state, no device compatibility list applies.
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
@@ -105,10 +105,10 @@ rules:
     comment: >
       Dynamically copied from the tracked entity's own device_class
       whenever the tracked entity is a sensor. Appropriate for a
-      value-mirroring helper — no single fixed device class would fit.
+      value-mirroring helper; no single fixed device class would fit.
   entity-disabled-by-default:
     status: exempt
-    comment: The one entity is the integration's entire purpose — nothing noisy/optional to disable by default.
+    comment: The one entity is the integration's entire purpose; nothing noisy/optional to disable by default.
   entity-translations: done
   exception-translations:
     status: exempt
@@ -135,7 +135,7 @@ rules:
     comment: No external dependency (empty requirements list).
   inject-websession:
     status: exempt
-    comment: No aiohttp client of our own — same reason as async-dependency.
+    comment: No aiohttp client of our own; same reason as async-dependency.
   strict-typing:
     status: todo
     comment: >

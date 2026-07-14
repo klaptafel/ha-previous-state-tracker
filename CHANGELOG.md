@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). Versions before 1.0.5 are not retroactively documented; see git history / GitHub releases for those.
 
+## [Unreleased]
+
+No user-facing changes. Some internal code cleanup.
+
+### Changed
+- Duplicated logic moved into a new shared `util.py`: `merged_config()` (combining a config entry's data+options, previously repeated in `sensor.py`/`diagnostics.py`) and `humanize_entity_id()` (the fallback display-name formatting, previously repeated in `config_flow.py`/`sensor.py`).
+- `config_flow.py`'s repeated "look up the device_id for an entity, or None" logic consolidated into a shared `_device_id_for()` helper.
+- `config_flow.py`'s shared `_extra_states_label_to_raw` state (previously accessed via an untyped `getattr(flow, ..., {})`) now declared properly through a small `_ExtraStatesLabelMapMixin` base class.
+- `sensor.py`'s disabled/removed repair-issue logic (previously two near-duplicate blocks) consolidated into one shared code path.
+- `sensor.py`'s tracked-entity unit/device-class/state-class sync now always applies the current values instead of first checking whether they changed; same end result, just simpler.
+- The hardcoded `True` default for `ignore_unknown`/`ignore_unavailable`, repeated across `config_flow.py`/`sensor.py`/`diagnostics.py`, replaced with shared `DEFAULT_IGNORE_UNKNOWN`/`DEFAULT_IGNORE_UNAVAILABLE` constants in `const.py`.
+
 ## [1.1.0] - 2026-07-13
 
 Adds several requested features: change which entity a tracker follows without deleting and recreating it, a new attribute showing how long the entity spent in its previous state, and the option to ignore extra device-specific states (not just the two universal ones) with a handy suggestion picker. A repair notification now also appears if the tracked entity is removed or disabled, so it's obvious why the sensor stopped updating. Also fixes two real bugs: renaming the tracked entity used to break the tracker (it now follows renames automatically), and ignoring "unavailable"/"unknown" states only worked in one direction ([#9](https://github.com/klaptafel/ha-previous-state-tracker/issues/9)). Naming is clearer too, especially for devices with more than one trackable sensor.

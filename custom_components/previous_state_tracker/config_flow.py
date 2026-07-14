@@ -27,7 +27,10 @@ from .const import (
     CONF_IGNORE_UNAVAILABLE,
     CONF_IGNORE_UNKNOWN,
     CONF_IGNORE_EXTRA_STATES,
+    DEFAULT_IGNORE_UNAVAILABLE,
+    DEFAULT_IGNORE_UNKNOWN,
 )
+from .util import humanize_entity_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -176,30 +179,40 @@ def _normalize_extra_states(values: list[str], label_to_raw: dict[str, str]) -> 
     return [lowercase_map.get(value.lower(), value) for value in values]
 
 
-def _stash_label_map(flow: config_entries.ConfigFlow | config_entries.OptionsFlow, suggested_options: list[SelectOptionDict]) -> None:
-    """Remember the label->raw mapping shown on this render, for
+class _ExtraStatesLabelMapMixin:
+    """Remembers the label->raw mapping shown on this render, for
     _resolve_submitted_input to read back on the next call to the same
     step (same flow instance across the render/submit round-trip) -- both
     PreviousStateTrackerConfigFlow.async_step_options and
-    PreviousStateTrackerOptionsFlow.async_step_init need this identically,
-    with no common base class to hang it on instead.
+    PreviousStateTrackerOptionsFlow.async_step_init need this identically.
     """
+    _extra_states_label_to_raw: dict[str, str] = {}
+
+
+def _device_id_for(hass: HomeAssistant, entity_id: str) -> str | None:
+    """Resolve the device_id backing entity_id, or None if it isn't
+    registered (or is, but has no device of its own)."""
+    entity_entry = er.async_get(hass).async_get(entity_id)
+    return entity_entry.device_id if entity_entry else None
+
+
+def _stash_label_map(flow: _ExtraStatesLabelMapMixin, suggested_options: list[SelectOptionDict]) -> None:
     flow._extra_states_label_to_raw = {opt["label"]: opt["value"] for opt in suggested_options}
 
 
-def _resolve_submitted_input(flow: config_entries.ConfigFlow | config_entries.OptionsFlow, user_input: dict[str, Any]) -> dict[str, Any]:
+def _resolve_submitted_input(flow: _ExtraStatesLabelMapMixin, user_input: dict[str, Any]) -> dict[str, Any]:
     """Reverse-map CONF_IGNORE_EXTRA_STATES in submitted input using the
     label map _stash_label_map saved for this same flow instance."""
     return {
         **user_input,
         CONF_IGNORE_EXTRA_STATES: _normalize_extra_states(
             user_input.get(CONF_IGNORE_EXTRA_STATES, []),
-            getattr(flow, "_extra_states_label_to_raw", {}),
+            flow._extra_states_label_to_raw,
         ),
     }
 
 
-class PreviousStateTrackerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class PreviousStateTrackerConfigFlow(_ExtraStatesLabelMapMixin, config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     def __init__(self):
@@ -237,7 +250,7 @@ class PreviousStateTrackerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if state and state.attributes.get("friendly_name"):
                     base_name = state.attributes.get("friendly_name")
                 else:
-                    base_name = original_entity_id.split('.')[-1].replace('_', ' ').title()
+                    base_name = humanize_entity_id(original_entity_id)
 
             suggested_name = f"{base_name} Previous State"
             suggested_options = await _async_suggested_options(self.hass, original_entity_id)
@@ -245,8 +258,8 @@ class PreviousStateTrackerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             options_schema = vol.Schema({
                 vol.Required("name", default=suggested_name): TextSelector(TextSelectorConfig()),
-                vol.Required(CONF_IGNORE_UNKNOWN, default=True): BooleanSelector(BooleanSelectorConfig()),
-                vol.Required(CONF_IGNORE_UNAVAILABLE, default=True): BooleanSelector(BooleanSelectorConfig()),
+                vol.Required(CONF_IGNORE_UNKNOWN, default=DEFAULT_IGNORE_UNKNOWN): BooleanSelector(BooleanSelectorConfig()),
+                vol.Required(CONF_IGNORE_UNAVAILABLE, default=DEFAULT_IGNORE_UNAVAILABLE): BooleanSelector(BooleanSelectorConfig()),
                 # Dropdown showing the entity's known/recent states using the
                 # same translated labels the dashboard shows (e.g. "Detected"
                 # for a motion sensor), while storing the underlying raw
@@ -267,11 +280,7 @@ class PreviousStateTrackerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         user_input = _resolve_submitted_input(self, user_input)
         final_data = {CONF_ENTITY_ID: self.data[CONF_ENTITY_ID], **user_input}
-
-        entity_registry = er.async_get(self.hass)
-        entity_entry = entity_registry.async_get(final_data[CONF_ENTITY_ID])
-        if entity_entry:
-            final_data["device_id"] = entity_entry.device_id
+        final_data["device_id"] = _device_id_for(self.hass, final_data[CONF_ENTITY_ID])
 
         return self.async_create_entry(title=final_data["name"], data=final_data)
 
@@ -286,10 +295,8 @@ class PreviousStateTrackerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(new_entity_id)
             self._abort_if_unique_id_configured()
 
-            entity_registry = er.async_get(self.hass)
-            entity_entry = entity_registry.async_get(new_entity_id)
             new_data = {**reconfigure_entry.data, CONF_ENTITY_ID: new_entity_id}
-            new_data["device_id"] = entity_entry.device_id if entity_entry else None
+            new_data["device_id"] = _device_id_for(self.hass, new_entity_id)
             # async_update_and_abort, not async_update_reload_and_abort --
             # this integration already has an entry.add_update_listener in
             # __init__.py that reloads on any entry change (fired via
@@ -311,14 +318,14 @@ class PreviousStateTrackerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class PreviousStateTrackerOptionsFlow(config_entries.OptionsFlow):
+class PreviousStateTrackerOptionsFlow(_ExtraStatesLabelMapMixin, config_entries.OptionsFlow):
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> config_entries.FlowResult:
         if user_input is not None:
             user_input = _resolve_submitted_input(self, user_input)
             return self.async_create_entry(title="", data=user_input)
 
-        current_ignore_unknown = self.config_entry.options.get(CONF_IGNORE_UNKNOWN, True)
-        current_ignore_unavailable = self.config_entry.options.get(CONF_IGNORE_UNAVAILABLE, True)
+        current_ignore_unknown = self.config_entry.options.get(CONF_IGNORE_UNKNOWN, DEFAULT_IGNORE_UNKNOWN)
+        current_ignore_unavailable = self.config_entry.options.get(CONF_IGNORE_UNAVAILABLE, DEFAULT_IGNORE_UNAVAILABLE)
         current_ignore_extra_states = self.config_entry.options.get(CONF_IGNORE_EXTRA_STATES, [])
         tracked_entity_id = self.config_entry.data[CONF_ENTITY_ID]
         # Passing the already-saved values in so a state that's no longer
