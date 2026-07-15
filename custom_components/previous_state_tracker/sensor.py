@@ -25,7 +25,7 @@ from .const import (
     DEFAULT_IGNORE_UNAVAILABLE,
     DEFAULT_IGNORE_UNKNOWN,
 )
-from .util import humanize_entity_id, merged_config
+from .util import IgnoredStates, humanize_entity_id, merged_config
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,25 +86,26 @@ class PreviousStateSensor(SensorEntity, RestoreEntity):
     ) -> None:
         self.hass = hass
         self._tracked_entity_id = entity_id
-        # A single lowercased set covering all three ignore options --
+        # A single IgnoredStates covering all three ignore options --
         # "unknown"/"unavailable" are HA's own state constants (always
         # exactly lowercase already) folded in alongside the user-supplied
-        # extra states, so _update_and_write_state only needs one
-        # membership check instead of three separate comparisons.
-        # Lowercasing is a second line of defense on top of config_flow.py's
-        # own case-insensitive reverse-mapping, for anything that slips
-        # through that (e.g. a raw value typed with the wrong case that was
-        # never offered as a suggestion in the first place). The
-        # originally-typed/picked case is still what's stored in the config
-        # entry and shown in diagnostics -- only this internal lookup set is
-        # normalized. Safe to compute once here: these options only change
-        # via a full entity reload (config-entry options update), never in
-        # place.
-        self._ignore_states = {s.lower() for s in ignore_extra_states}
+        # extra states (which may include '*' wildcards, e.g. "Error: *"),
+        # so _update_and_write_state only needs one matches() check instead
+        # of separate comparisons. Case-insensitivity is a second line of
+        # defense on top of config_flow.py's own case-insensitive
+        # reverse-mapping, for anything that slips through that (e.g. a raw
+        # value typed with the wrong case that was never offered as a
+        # suggestion in the first place). The originally-typed/picked case
+        # is still what's stored in the config entry and shown in
+        # diagnostics -- only this internal lookup is normalized. Safe to
+        # compute once here: these options only change via a full entity
+        # reload (config-entry options update), never in place.
+        extra_states = list(ignore_extra_states)
         if ignore_unknown:
-            self._ignore_states.add("unknown")
+            extra_states.append("unknown")
         if ignore_unavailable:
-            self._ignore_states.add("unavailable")
+            extra_states.append("unavailable")
+        self._ignore_states = IgnoredStates(extra_states)
         self._attr_unique_id = unique_id
         self._attr_native_value = None
         self._attr_extra_state_attributes = {
@@ -310,8 +311,8 @@ class PreviousStateSensor(SensorEntity, RestoreEntity):
         new_state_value = new_state.state if new_state else None
 
         if self._ignore_states and (
-            old_state.state.lower() in self._ignore_states
-            or (new_state_value is not None and new_state_value.lower() in self._ignore_states)
+            self._ignore_states.matches(old_state.state)
+            or (new_state_value is not None and self._ignore_states.matches(new_state_value))
         ):
             return
 

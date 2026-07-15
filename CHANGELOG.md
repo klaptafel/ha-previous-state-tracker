@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). Versions before 1.0.5 are not retroactively documented; see git history / GitHub releases for those.
 
+## [1.2.0] - 2026-07-15
+
+Adds wildcard support to "Additional states to ignore": a `*` matches any run of characters (e.g. "Error: *" matches "Error: dustbin full"), handy for devices with several similar states you don't want to record individually.
+
+### Added
+- Wildcard (`*`) support in "Additional states to ignore" -- an entry containing `*` is matched as a pattern instead of requiring an exact value.
+- First test suite (`tests/`), covering the ignore-state matching logic.
+
+### Changed
+- Ignore-state matching moved into a new `IgnoredStates` helper in `util.py`, replacing the plain lowercased set previously built in `sensor.py`.
+
 ## [1.1.1] - 2026-07-14
 
 Some internal code cleanup.

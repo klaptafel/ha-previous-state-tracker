@@ -121,6 +121,11 @@ reports "off" after a Home Assistant restart, even if the machine was never runn
   it was never offered as a suggestion. Typing something that doesn't match any known state or
   label at all (e.g. a value from a device class this entity doesn't have) is stored exactly as
   typed.
+- A value in "Additional states to ignore" can contain `*` as a wildcard, matching any run of
+  characters (including none). Useful for a family of related states you don't want to list one by
+  one, e.g. a robot vacuum's `Error: *` covers `Error: dustbin full`, `Error: stuck`, etc., without
+  needing to record any particular error text as a meaningful previous state.
+  Everything else in the value is matched literally -- only `*` is special.
 
 ---
 

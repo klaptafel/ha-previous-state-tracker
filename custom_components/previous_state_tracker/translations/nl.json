@@ -20,7 +20,7 @@
                 },
                 "data_description": {
                     "name": "Identificeert deze tracker onder Instellingen > Apparaten & diensten. De weergavenaam van de sensor zelf is automatisch -- die volgt de naam van de gevolgde entiteit (en het bijbehorende apparaat, indien aanwezig), zodat die klopt blijft ook als je die entiteit later hernoemt.",
-                    "ignore_extra_states": "Kies uit de bekende/recente statussen van de entiteit (getoond zoals de entiteit ze zelf ook weergeeft), of typ een nieuwe. Beïnvloedt alleen welke status als de vorige status van de gevolgde entiteit telt -- verbergt of filtert de bron-entiteit zelf niet."
+                    "ignore_extra_states": "Kies uit de bekende/recente statussen van de entiteit (getoond zoals de entiteit ze zelf ook weergeeft), of typ een nieuwe. Een '*' matcht een willekeurige reeks tekens (bv. \"Error: *\" matcht \"Error: dustbin full\"). Beïnvloedt alleen welke status als de vorige status van de gevolgde entiteit telt -- verbergt of filtert de bron-entiteit zelf niet."
                 }
             },
             "reconfigure": {
@@ -47,7 +47,7 @@
                     "ignore_extra_states": "Extra te negeren statussen"
                 },
                 "data_description": {
-                    "ignore_extra_states": "Kies uit de bekende/recente statussen van de entiteit (getoond zoals de entiteit ze zelf ook weergeeft), of typ een nieuwe. Beïnvloedt alleen welke status als de vorige status van de gevolgde entiteit telt -- verbergt of filtert de bron-entiteit zelf niet."
+                    "ignore_extra_states": "Kies uit de bekende/recente statussen van de entiteit (getoond zoals de entiteit ze zelf ook weergeeft), of typ een nieuwe. Een '*' matcht een willekeurige reeks tekens (bv. \"Error: *\" matcht \"Error: dustbin full\"). Beïnvloedt alleen welke status als de vorige status van de gevolgde entiteit telt -- verbergt of filtert de bron-entiteit zelf niet."
                 }
             }
         }

@@ -20,7 +20,7 @@
                 },
                 "data_description": {
                     "name": "Identifies this tracker under Settings > Devices & Services. The sensor's own display name is automatic -- it follows the tracked entity's name (and its device, if it has one), so it stays correct even if you rename that entity later.",
-                    "ignore_extra_states": "Pick from the entity's known/recent states (shown the same way the entity itself displays them), or type a new one. Only affects which state counts as the tracked entity's previous state -- it doesn't hide or filter the source entity itself."
+                    "ignore_extra_states": "Pick from the entity's known/recent states (shown the same way the entity itself displays them), or type a new one. A '*' matches any run of characters (e.g. \"Error: *\" matches \"Error: dustbin full\"). Only affects which state counts as the tracked entity's previous state -- it doesn't hide or filter the source entity itself."
                 }
             },
             "reconfigure": {
@@ -47,7 +47,7 @@
                     "ignore_extra_states": "Additional states to ignore"
                 },
                 "data_description": {
-                    "ignore_extra_states": "Pick from the entity's known/recent states (shown the same way the entity itself displays them), or type a new one. Only affects which state counts as the tracked entity's previous state -- it doesn't hide or filter the source entity itself."
+                    "ignore_extra_states": "Pick from the entity's known/recent states (shown the same way the entity itself displays them), or type a new one. A '*' matches any run of characters (e.g. \"Error: *\" matches \"Error: dustbin full\"). Only affects which state counts as the tracked entity's previous state -- it doesn't hide or filter the source entity itself."
                 }
             }
         }
