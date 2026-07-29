@@ -6,7 +6,7 @@ All notable changes to this project are documented here. Format loosely follows 
 
 This release makes sure the "Previous state" sensor keeps showing up on the right device once Home Assistant 2026.8 changes how devices can be shared between integrations. Nothing changes for you: the sensor keeps working exactly where you'd expect it, automatically.
 
-While you're here: check out [Update Manager](https://github.com/HA-Update-Manager/ha-update-manager), a new integration that takes the worry out of updating automatically, holding off if others have already reported problems with a release.
+While you're here: tired of the ever growing update list? [Update Manager](https://github.com/HA-Update-Manager/ha-update-manager) is a new integration that lets you set your own rules for which updates install automatically, and holds off if the community has already flagged a release as broken.
 
 ### Changed
 - **The "Previous state" sensor now links to the tracked entity's device instead of merging onto it**, ahead of HA 2026.8's single-config-entry-per-device model (a device can no longer be co-owned by two integrations' config entries). Behaves the same way HA core's own `threshold`/`derivative` helpers already show their entity on a source device without owning it. A one-time migration cleans up the old merged/split device for existing installs, relinking the sensor to the real tracked-entity device automatically -- no action needed.
