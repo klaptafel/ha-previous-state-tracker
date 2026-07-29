@@ -189,13 +189,6 @@ class _ExtraStatesLabelMapMixin:
     _extra_states_label_to_raw: dict[str, str] = {}
 
 
-def _device_id_for(hass: HomeAssistant, entity_id: str) -> str | None:
-    """Resolve the device_id backing entity_id, or None if it isn't
-    registered (or is, but has no device of its own)."""
-    entity_entry = er.async_get(hass).async_get(entity_id)
-    return entity_entry.device_id if entity_entry else None
-
-
 def _stash_label_map(flow: _ExtraStatesLabelMapMixin, suggested_options: list[SelectOptionDict]) -> None:
     flow._extra_states_label_to_raw = {opt["label"]: opt["value"] for opt in suggested_options}
 
@@ -214,6 +207,12 @@ def _resolve_submitted_input(flow: _ExtraStatesLabelMapMixin, user_input: dict[s
 
 class PreviousStateTrackerConfigFlow(_ExtraStatesLabelMapMixin, config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
+    # Bumped alongside __init__.py's own async_migrate_entry: 1.2 removes a
+    # helper config entry that had merged onto the tracked entity's own
+    # device (see sensor.py's own comment) instead of just linking to it,
+    # same one-time cleanup HA core's own threshold/derivative run for
+    # HA 2026.8's single-config-entry-per-device model.
+    MINOR_VERSION = 2
 
     def __init__(self):
         self.data: dict[str, Any] = {}
@@ -280,7 +279,6 @@ class PreviousStateTrackerConfigFlow(_ExtraStatesLabelMapMixin, config_entries.C
 
         user_input = _resolve_submitted_input(self, user_input)
         final_data = {CONF_ENTITY_ID: self.data[CONF_ENTITY_ID], **user_input}
-        final_data["device_id"] = _device_id_for(self.hass, final_data[CONF_ENTITY_ID])
 
         return self.async_create_entry(title=final_data["name"], data=final_data)
 
@@ -296,7 +294,6 @@ class PreviousStateTrackerConfigFlow(_ExtraStatesLabelMapMixin, config_entries.C
             self._abort_if_unique_id_configured()
 
             new_data = {**reconfigure_entry.data, CONF_ENTITY_ID: new_entity_id}
-            new_data["device_id"] = _device_id_for(self.hass, new_entity_id)
             # async_update_and_abort, not async_update_reload_and_abort --
             # this integration already has an entry.add_update_listener in
             # __init__.py that reloads on any entry change (fired via

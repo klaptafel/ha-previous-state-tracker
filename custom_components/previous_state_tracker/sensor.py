@@ -5,8 +5,9 @@ from typing import Callable
 from homeassistant.components.sensor import SensorEntity, SensorDeviceClass, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback, State, Event
-from homeassistant.helpers import entity_registry as er, device_registry as dr, issue_registry as ir
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers.device import async_entity_id_to_device
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     async_track_entity_registry_updated_event,
@@ -42,19 +43,6 @@ async def async_setup_entry(
     ignore_unknown = config.get(CONF_IGNORE_UNKNOWN, DEFAULT_IGNORE_UNKNOWN)
     ignore_unavailable = config.get(CONF_IGNORE_UNAVAILABLE, DEFAULT_IGNORE_UNAVAILABLE)
     ignore_extra_states = config.get(CONF_IGNORE_EXTRA_STATES, [])
-    device_id = config.get("device_id")
-
-    # Reusing the tracked entity's own device_identifiers (not inventing a
-    # new device) makes HA merge this sensor onto that *same* device page --
-    # a real merge via matching identifiers, not just a cross-link. See
-    # PreviousStateSensor.name for how this also drives the entity's own
-    # display name.
-    device_identifiers: set[tuple[str, str]] | None = None
-    if device_id:
-        device_registry = dr.async_get(hass)
-        device = device_registry.async_get(device_id)
-        if device:
-            device_identifiers = device.identifiers
 
     sensor = PreviousStateSensor(
         hass=hass,
@@ -63,7 +51,6 @@ async def async_setup_entry(
         ignore_unavailable=ignore_unavailable,
         ignore_extra_states=ignore_extra_states,
         unique_id=config_entry.entry_id,
-        device_identifiers=device_identifiers
     )
     async_add_entities([sensor])
 
@@ -82,7 +69,6 @@ class PreviousStateSensor(SensorEntity, RestoreEntity):
         ignore_unavailable: bool,
         ignore_extra_states: list[str],
         unique_id: str,
-        device_identifiers: set[tuple[str, str]] | None
     ) -> None:
         self.hass = hass
         self._tracked_entity_id = entity_id
@@ -120,10 +106,19 @@ class PreviousStateSensor(SensorEntity, RestoreEntity):
         self._disabled_issue_id = f"tracked_entity_disabled_{unique_id}"
         self._remove_state_listener: Callable[[], None] | None = None
 
-        if device_identifiers:
-            self._attr_device_info = DeviceInfo(
-                identifiers=device_identifiers
-            )
+        # Link, not merge (found by review, 2026-07-30, ahead of HA 2026.8's
+        # single-config-entry-per-device model): a device can belong to only
+        # one config entry now, so reusing the tracked entity's own
+        # identifiers to *merge* onto its device (the old approach here)
+        # would make this integration's own config entry try to co-own it.
+        # async_entity_id_to_device is the same helper core's own threshold/
+        # derivative/trend etc. use to show their entity on a source
+        # entity's device without claiming any part of it -- confirmed
+        # against their real source (home-assistant/core). Guard mirrors
+        # threshold's own binary_sensor.py: only entity_id="" in preview
+        # mode is falsy here, never a real tracked entity.
+        if entity_id:
+            self.device_entry = async_entity_id_to_device(hass, entity_id)
 
     @property
     def name(self) -> str | None:
@@ -135,9 +130,9 @@ class PreviousStateSensor(SensorEntity, RestoreEntity):
         bare "<device> Previous State" would be ambiguous about which one's
         history this actually is.
 
-        With a device (merged onto the tracked entity's own real device via
-        shared identifiers): read the tracked entity's own entity-only name
-        from the registry (its *state*'s friendly name is already
+        With a device (linked to the tracked entity's own real device, see
+        __init__'s own comment): read the tracked entity's own entity-only
+        name from the registry (its *state*'s friendly name is already
         device-prefixed -- has_entity_name would double the device name if
         used directly) and combine it with the normal translated "Previous
         State" suffix (entity.sensor.previous_state). HA's own
@@ -149,7 +144,7 @@ class PreviousStateSensor(SensorEntity, RestoreEntity):
         the source entity gets renamed later, instead of freezing a name at
         config time the way this used to work.
         """
-        if self._attr_device_info is not None:
+        if self.device_entry is not None:
             entity_entry = er.async_get(self.hass).async_get(self._tracked_entity_id)
             source_name = (entity_entry.name or entity_entry.original_name) if entity_entry else None
             if not source_name:
@@ -158,8 +153,7 @@ class PreviousStateSensor(SensorEntity, RestoreEntity):
             # itself stores its already-fully-prefixed name in the registry
             # (e.g. "Woonkamer Fraimic Send Status") -- strip that prefix so
             # it isn't doubled when HA re-prepends the same device name.
-            device = dr.async_get(self.hass).async_get_device(identifiers=self._attr_device_info["identifiers"])
-            device_name = (device.name_by_user or device.name) if device else None
+            device_name = self.device_entry.name_by_user or self.device_entry.name
             if device_name and source_name.startswith(f"{device_name} "):
                 source_name = source_name[len(device_name) + 1:]
             return f"{source_name} {super().name}"

@@ -17,9 +17,12 @@ rules:
   config-flow-test-coverage:
     status: todo
     comment: >
-      No test suite exists in this project at all (no tests/ directory).
-      Needs a pytest-homeassistant-custom-component setup before this (or
-      test-coverage below) can be satisfied.
+      tests/test_util.py exists (pure logic, IgnoredStates, no HA import
+      needed), but nothing exercises the config/options flow itself. Needs a
+      pytest-homeassistant-custom-component setup before this (or
+      test-coverage below) can be satisfied -- not installable in this
+      local environment (python3.9/lru-dict build failure), same blocker
+      as last-time-tracker.
   dependency-transparency:
     status: done
     comment: No external dependencies (manifest.json requirements is empty).
@@ -35,10 +38,10 @@ rules:
     status: done
     comment: >
       _attr_has_entity_name = True. When the tracked entity has a device
-      (merged onto that same device via shared identifiers, see the
-      `devices` rule below), the name resolves via translation_key to the
-      "Previous State" translation, auto-prefixed with that device's own
-      always-current name. Without a device, the name property computes
+      (linked to that same device, see the `devices` rule below), the name
+      resolves via translation_key to the "Previous State" translation,
+      auto-prefixed with that device's own always-current name. Without a
+      device, the name property computes
       "<tracked entity's current name> Previous State" itself, so it stays
       correct if the tracked entity is renamed later -- previously this was
       a static string frozen at config time.
@@ -74,12 +77,19 @@ rules:
     comment: No authentication needed.
   test-coverage:
     status: todo
-    comment: Blocked on the same missing test suite as config-flow-test-coverage above.
+    comment: Blocked on the same missing pytest-homeassistant-custom-component setup as config-flow-test-coverage above.
 
   # Gold
   devices:
     status: done
-    comment: DeviceInfo is set from the tracked entity's device_identifiers when the source entity belongs to a device.
+    comment: >-
+      self.device_entry links to the tracked entity's own device (via
+      async_entity_id_to_device) when the source entity belongs to one --
+      changed 2026-07-30 from merging via shared identifiers, which made
+      this entry a co-owner of that device, no longer possible under HA
+      2026.8's single-config-entry-per-device model (confirmed against
+      home-assistant/core's own threshold/derivative, which use the same
+      helper).
   diagnostics: done
   discovery:
     status: exempt
