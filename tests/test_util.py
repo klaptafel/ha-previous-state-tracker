@@ -4,8 +4,8 @@ Loaded directly from its file path via importlib, bypassing
 custom_components/previous_state_tracker/__init__.py (which imports
 homeassistant at module level -- unavailable in this environment). util.py
 itself keeps its one homeassistant reference (ConfigEntry) TYPE_CHECKING-only
-specifically so this works. See TODO-CLAUDE.md for the
-pytest-homeassistant-custom-component install constraint this works around;
+specifically so this works, sidestepping a local
+pytest-homeassistant-custom-component install constraint;
 this covers the pure logic only, not entity/config-flow behavior.
 """
 from __future__ import annotations
