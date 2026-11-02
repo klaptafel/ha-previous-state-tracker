@@ -7,11 +7,14 @@ pytest-homeassistant-custom-component installed.
 """
 from __future__ import annotations
 
+import math
 import re
 from typing import TYPE_CHECKING, Any, Iterable
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
+
+_NON_NUMERIC_DEVICE_CLASSES = {"date", "enum", "timestamp", "uptime"}
 
 
 def merged_config(entry: "ConfigEntry") -> dict[str, Any]:
@@ -69,3 +72,41 @@ class IgnoredStates:
         if lowered in self._exact:
             return True
         return any(pattern.match(lowered) for pattern in self._patterns)
+
+
+def sanitize_copied_metadata(
+    device_class: str | None,
+    unit_of_measurement: str | None,
+    state_class: str | None,
+    value: Any,
+) -> tuple[str | None, str | None, str | None]:
+    """Decide which of the device_class/unit/state_class copied from a
+    tracked entity survive, given the value about to be written as the
+    previous-state sensor's own state. SensorEntity raises ValueError (and
+    the write is lost) when they disagree with the value, e.g. a leftover
+    unit on a non-numeric device class, or a unit/state_class implying a
+    numeric value that the previous state can't satisfy (including a
+    non-finite float, which HA rejects just like a non-numeric one).
+
+    For "date", "timestamp", and "uptime", the value must already be
+    parsed into a date/datetime by the caller (None if parsing failed) --
+    this module stays free of a homeassistant import so it can run under
+    plain pytest.
+    """
+    if device_class in _NON_NUMERIC_DEVICE_CLASSES:
+        if device_class == "enum":
+            # ENUM needs an options list this sensor never sets.
+            return None, None, None
+        if value is None:
+            return None, None, None
+        return device_class, None, None
+
+    if value is None or not (device_class or unit_of_measurement or state_class):
+        return device_class, unit_of_measurement, state_class
+    try:
+        numeric_value = float(value)
+    except (TypeError, ValueError):
+        numeric_value = None
+    if numeric_value is None or not math.isfinite(numeric_value):
+        return None, None, None
+    return device_class, unit_of_measurement, state_class

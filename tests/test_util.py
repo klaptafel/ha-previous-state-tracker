@@ -59,6 +59,72 @@ class TestIgnoredStatesExactMatch:
         assert not matcher.matches("front_on")
 
 
+class TestSanitizeCopiedMetadata:
+    def test_numeric_value_keeps_everything(self):
+        result = util.sanitize_copied_metadata("temperature", "°C", "measurement", "21.5")
+        assert result == ("temperature", "°C", "measurement")
+
+    def test_text_value_drops_numeric_metadata(self):
+        result = util.sanitize_copied_metadata(None, "sleep", None, "deep")
+        assert result == (None, None, None)
+
+    def test_none_value_with_no_metadata_passes_through(self):
+        result = util.sanitize_copied_metadata(None, None, None, None)
+        assert result == (None, None, None)
+
+    def test_none_value_with_metadata_passes_through_unit_stays(self):
+        # SensorEntity itself treats a None value as unknown/unavailable
+        # regardless of device_class/unit/state_class, so nothing to drop.
+        result = util.sanitize_copied_metadata("humidity", "%", "measurement", None)
+        assert result == ("humidity", "%", "measurement")
+
+    def test_nan_string_is_rejected_like_non_numeric(self):
+        result = util.sanitize_copied_metadata(None, "W", "measurement", "nan")
+        assert result == (None, None, None)
+
+    def test_infinite_string_is_rejected_like_non_numeric(self):
+        result = util.sanitize_copied_metadata(None, "W", "measurement", "inf")
+        assert result == (None, None, None)
+
+    def test_finite_float_is_accepted(self):
+        result = util.sanitize_copied_metadata(None, "W", "measurement", "3.2")
+        assert result == (None, "W", "measurement")
+
+    def test_enum_always_drops_device_class(self):
+        result = util.sanitize_copied_metadata("enum", None, None, "charging")
+        assert result == (None, None, None)
+
+    def test_timestamp_keeps_device_class_when_already_parsed(self):
+        import datetime
+
+        parsed = datetime.datetime.now(datetime.timezone.utc)
+        result = util.sanitize_copied_metadata("timestamp", None, None, parsed)
+        assert result == ("timestamp", None, None)
+
+    def test_timestamp_drops_device_class_when_unparseable(self):
+        # The caller passes None once it failed to parse the recorded
+        # string into an aware datetime.
+        result = util.sanitize_copied_metadata("timestamp", None, None, None)
+        assert result == (None, None, None)
+
+    def test_uptime_behaves_like_timestamp(self):
+        import datetime
+
+        parsed = datetime.datetime.now(datetime.timezone.utc)
+        assert util.sanitize_copied_metadata("uptime", None, None, parsed) == ("uptime", None, None)
+        assert util.sanitize_copied_metadata("uptime", None, None, None) == (None, None, None)
+
+    def test_date_keeps_device_class_when_already_parsed(self):
+        import datetime
+
+        result = util.sanitize_copied_metadata("date", None, None, datetime.date.today())
+        assert result == ("date", None, None)
+
+    def test_date_drops_device_class_when_unparseable(self):
+        result = util.sanitize_copied_metadata("date", None, None, None)
+        assert result == (None, None, None)
+
+
 class TestIgnoredStatesWildcard:
     def test_prefix_wildcard(self):
         matcher = util.IgnoredStates(["Error: *"])

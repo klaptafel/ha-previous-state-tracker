@@ -27,17 +27,11 @@ from .const import (
     DEFAULT_IGNORE_UNAVAILABLE,
     DEFAULT_IGNORE_UNKNOWN,
 )
-from .util import IgnoredStates, humanize_entity_id, merged_config
+from .util import IgnoredStates, humanize_entity_id, merged_config, sanitize_copied_metadata
 
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
-
-_NON_NUMERIC_DEVICE_CLASSES = {
-    SensorDeviceClass.DATE,
-    SensorDeviceClass.ENUM,
-    SensorDeviceClass.TIMESTAMP,
-}
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -341,45 +335,31 @@ class PreviousStateSensor(SensorEntity, RestoreEntity):
         sensor consistent with the value we're about to write. SensorEntity
         raises ValueError (and the state write is lost) when they disagree,
         e.g. Gadgetbridge's timestamp + millisecond combo, or a text value
-        from a sensor whose unit is 'sleep'."""
+        from a sensor whose unit is 'sleep'. The actual decision logic is
+        in util.sanitize_copied_metadata so it can be unit tested without
+        Home Assistant installed; this method only handles the parts that
+        need dt_util (timestamp/uptime/date need an aware datetime or date,
+        but the recorded previous state is the source's ISO string)."""
         device_class = self._attr_device_class
         value = self._attr_native_value
 
-        if device_class in _NON_NUMERIC_DEVICE_CLASSES:
-            # Non-numeric classes never carry a unit or state_class.
-            self._attr_native_unit_of_measurement = None
-            self._attr_state_class = None
-            if device_class == SensorDeviceClass.TIMESTAMP and isinstance(value, str):
-                # A timestamp sensor's native value must be an aware datetime,
-                # but the recorded previous state is the source's ISO string.
-                parsed = dt_util.parse_datetime(value)
-                if parsed is not None and parsed.tzinfo is not None:
-                    self._attr_native_value = parsed
-                else:
-                    self._attr_device_class = None
-            elif device_class == SensorDeviceClass.DATE and isinstance(value, str):
-                parsed = dt_util.parse_date(value)
-                if parsed is not None:
-                    self._attr_native_value = parsed
-                else:
-                    self._attr_device_class = None
-            elif device_class == SensorDeviceClass.ENUM:
-                # ENUM needs an options list this sensor never sets.
-                self._attr_device_class = None
-            return
+        # Compared as plain text, not SensorDeviceClass.UPTIME: that member
+        # doesn't exist on this integration's minimum supported HA version,
+        # and referencing it directly would raise AttributeError on import.
+        if device_class in (SensorDeviceClass.TIMESTAMP, "uptime") and isinstance(value, str):
+            parsed = dt_util.parse_datetime(value)
+            value = parsed if parsed is not None and parsed.tzinfo is not None else None
+        elif device_class == SensorDeviceClass.DATE and isinstance(value, str):
+            value = dt_util.parse_date(value)
 
-        if value is None or not (
-            device_class or self._attr_native_unit_of_measurement or self._attr_state_class
-        ):
-            return
-        try:
-            float(value)
-        except (TypeError, ValueError):
-            # Any unit/state_class/numeric device_class implies a numeric
-            # value; a text previous state can't satisfy that, so drop them.
-            self._attr_native_unit_of_measurement = None
-            self._attr_device_class = None
-            self._attr_state_class = None
+        device_class, unit, state_class = sanitize_copied_metadata(
+            device_class, self._attr_native_unit_of_measurement, self._attr_state_class, value
+        )
+        self._attr_device_class = device_class
+        self._attr_native_unit_of_measurement = unit
+        self._attr_state_class = state_class
+        if device_class in (SensorDeviceClass.TIMESTAMP, "uptime", SensorDeviceClass.DATE):
+            self._attr_native_value = value
 
     def _check_tracked_entity_removed(self) -> None:
         """Raise a repair issue explaining why the tracked entity has no
