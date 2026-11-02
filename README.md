@@ -29,11 +29,11 @@ This integration provides a helper to track the previous state of an entity. Whi
 
 ## Installation
 
-This integration is available via [HACS](https://hacs.xyz/).
+This integration is available via [HACS](https://hacs.xyz/) (built into Home Assistant itself as **Marketplace** from version 2026.11 onwards).
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=klaptafel&repository=ha-previous-state-tracker&category=integration)
 
-1.  Go to HACS in your Home Assistant.
+1.  Go to HACS (or Marketplace, on Home Assistant 2026.11+) in your Home Assistant.
 2.  Search for "Previous State Tracker" and download it.
 3.  Restart Home Assistant.
 
