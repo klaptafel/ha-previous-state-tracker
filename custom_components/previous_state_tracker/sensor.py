@@ -16,6 +16,7 @@ from homeassistant.helpers.event import (
     EventStateChangedData,
 )
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.util import dt as dt_util
 
 from .const import (
     DOMAIN,
@@ -31,6 +32,12 @@ from .util import IgnoredStates, humanize_entity_id, merged_config
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
+
+_NON_NUMERIC_DEVICE_CLASSES = {
+    SensorDeviceClass.DATE,
+    SensorDeviceClass.ENUM,
+    SensorDeviceClass.TIMESTAMP,
+}
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -323,6 +330,56 @@ class PreviousStateSensor(SensorEntity, RestoreEntity):
 
         if self.hass.is_running:
             self.async_write_ha_state()
+
+    @callback
+    def async_write_ha_state(self) -> None:
+        self._sanitize_copied_metadata()
+        super().async_write_ha_state()
+
+    def _sanitize_copied_metadata(self) -> None:
+        """Make the unit/device_class/state_class copied from the tracked
+        sensor consistent with the value we're about to write. SensorEntity
+        raises ValueError (and the state write is lost) when they disagree,
+        e.g. Gadgetbridge's timestamp + millisecond combo, or a text value
+        from a sensor whose unit is 'sleep'."""
+        device_class = self._attr_device_class
+        value = self._attr_native_value
+
+        if device_class in _NON_NUMERIC_DEVICE_CLASSES:
+            # Non-numeric classes never carry a unit or state_class.
+            self._attr_native_unit_of_measurement = None
+            self._attr_state_class = None
+            if device_class == SensorDeviceClass.TIMESTAMP and isinstance(value, str):
+                # A timestamp sensor's native value must be an aware datetime,
+                # but the recorded previous state is the source's ISO string.
+                parsed = dt_util.parse_datetime(value)
+                if parsed is not None and parsed.tzinfo is not None:
+                    self._attr_native_value = parsed
+                else:
+                    self._attr_device_class = None
+            elif device_class == SensorDeviceClass.DATE and isinstance(value, str):
+                parsed = dt_util.parse_date(value)
+                if parsed is not None:
+                    self._attr_native_value = parsed
+                else:
+                    self._attr_device_class = None
+            elif device_class == SensorDeviceClass.ENUM:
+                # ENUM needs an options list this sensor never sets.
+                self._attr_device_class = None
+            return
+
+        if value is None or not (
+            device_class or self._attr_native_unit_of_measurement or self._attr_state_class
+        ):
+            return
+        try:
+            float(value)
+        except (TypeError, ValueError):
+            # Any unit/state_class/numeric device_class implies a numeric
+            # value; a text previous state can't satisfy that, so drop them.
+            self._attr_native_unit_of_measurement = None
+            self._attr_device_class = None
+            self._attr_state_class = None
 
     def _check_tracked_entity_removed(self) -> None:
         """Raise a repair issue explaining why the tracked entity has no
